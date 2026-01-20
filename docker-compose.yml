@@ -1,0 +1,47 @@
+version: "3"
+
+services:
+    neo4j:
+        image: neo4j:latest
+        environment:
+            NEO4J_AUTH: neo4j/password
+        ports:
+            - "7474:7474"
+            - "7687:7687"
+        volumes:
+            - neo4j_data:/data
+            - neo4j_logs:/logs
+
+    hospital_neo4j_etl:
+        build:
+            context: ./hospital_neo4j_etl
+        env_file:
+            - .env
+        depends_on:
+            - neo4j
+        volumes:
+            - ./data:/data
+
+    chatbot_api:
+        build:
+            context: ./chatbot_api
+        env_file:
+            - .env
+        depends_on:
+            - hospital_neo4j_etl
+        ports:
+            - "8000:8000"
+
+    chatbot_frontend:
+        build:
+            context: ./chatbot_frontend
+        env_file:
+            - .env
+        depends_on:
+            - chatbot_api
+        ports:
+            - "8501:8501"
+
+volumes:
+    neo4j_data:
+    neo4j_logs:
